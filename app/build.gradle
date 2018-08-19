@@ -1,0 +1,53 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.finalhints.videostreamwithcache"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+//        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.2'
+
+//    api "androidx.appcompat:appcompat:$rootProject.androidXVersion"
+
+    implementation "androidx.appcompat:appcompat:$rootProject.androidXVersion"
+    implementation "androidx.recyclerview:recyclerview:$rootProject.androidXVersion"
+    implementation "com.google.android.material:material:$rootProject.googleMaterialVersion"
+
+    implementation ('com.google.android.exoplayer:exoplayer-core:2.8.4') {
+        exclude group: "com.android.support"
+    }
+    //implementation 'com.google.android.exoplayer:exoplayer-dash:2.8.4'
+    implementation ('com.google.android.exoplayer:exoplayer-ui:2.8.4') {
+        exclude group: "com.android.support"
+    }
+
+
+//    testImplementation 'junit:junit:4.12'
+ //   androidTestImplementation 'androidx.test:runner:1.1.0-alpha3'
+   // androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0-alpha3'
+}
