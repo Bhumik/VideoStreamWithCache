@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun getData() {
         mEntityList.add(ItemType("VideoStream without offline cache", "Simple example of playing MP4 video without any type of offline caching"))
-        mEntityList.add(ItemType("VideoStream with offline cache", "Example of playing MP4 video with offline caching - it doesn't go for downloading whole file even if you have not watched till end"))
+        mEntityList.add(ItemType("VideoStream with offline cache", "Example of playing MP4 video with offline caching - it doesn't go for downloading whole file if you have not watched till end"))
         mEntityList.add(ItemType("VideoStream with full offline cache", "Example of playing MP4 video with full video offline caching - it downloads full video in background"))
     }
 

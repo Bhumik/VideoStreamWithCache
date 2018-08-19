@@ -5,24 +5,23 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.finalhints.videostreamwithcache.R
 import com.finalhints.videostreamwithcache.models.ItemType
 import com.finalhints.videostreamwithcache.utils.DownloadUtil
-import com.google.android.exoplayer2.DefaultLoadControl
-import com.google.android.exoplayer2.DefaultRenderersFactory
-import com.google.android.exoplayer2.ExoPlayerFactory
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ExtractorMediaSource
+import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.NoOpCacheEvictor
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
 import kotlinx.android.synthetic.main.activity_exo_player.*
-
 
 /**
  * activity to show case playing video from remote file using exoplayer with caching latest buffer of video
@@ -39,13 +38,16 @@ class ExoPlayerActivity1 : AppCompatActivity() {
         }
     }
 
-
     private val mPlayerView: PlayerView by lazy { findViewById<PlayerView>(R.id.exoPlayerView) }
+
+    /**
+     * object containing item information to play
+     */
     private lateinit var mItemType: ItemType
 
-    private var player: SimpleExoPlayer? = null
-    private var mPlayWhenReady = true
+    private var mPlayer: SimpleExoPlayer? = null
 
+    private var mPlayWhenReady = true
     /**
      * cache to help reference
      */
@@ -76,6 +78,11 @@ class ExoPlayerActivity1 : AppCompatActivity() {
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
+
+        ivRetry.setOnClickListener {
+            ivRetry.visibility = View.GONE
+            prepare()
+        }
     }
 
     /**
@@ -96,31 +103,30 @@ class ExoPlayerActivity1 : AppCompatActivity() {
         releasePlayer()
     }
 
-
     /**
      * release player to free resources and coder
      */
     private fun releasePlayer() {
-        player?.let {
+        mPlayer?.let {
             playbackPosition = it.currentPosition
             mPlayWhenReady = it.playWhenReady
             it.release()
         }
         mSimpleCache?.release()
-        player = null
+        mPlayer = null
     }
 
     /**
      * initialize player with default/latest configuration and start playing video
      */
     private fun initializePlayer() {
-        player = ExoPlayerFactory.newSimpleInstance(
+        mPlayer = ExoPlayerFactory.newSimpleInstance(
                 DefaultRenderersFactory(this),
                 DefaultTrackSelector(), DefaultLoadControl())
 
-        mPlayerView.player = player
+        mPlayerView.player = mPlayer
 
-        player?.apply {
+        mPlayer?.apply {
             this.playWhenReady = mPlayWhenReady
             seekTo(playbackPosition)
         }
@@ -135,73 +141,36 @@ class ExoPlayerActivity1 : AppCompatActivity() {
         /* instance of mediasource with input cache data source */
         mMediaSource = ExtractorMediaSource.Factory(cacheFactory).createMediaSource(uri)
 
-//        setListener()
-        player?.prepare(mMediaSource, false, false)
+        mPlayer?.addListener(mPlayerListener)
+
+        mPlayer?.prepare(mMediaSource, false, false)
     }
 
-    /*  private fun setListener() {
-          player?.addListener(object : Player.EventListener{
-              override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
+    /**
+     * retry to play media
+     */
+    private fun prepare() {
+        mPlayer?.prepare(mMediaSource, false, false)
+        mPlayerView.showController()
+    }
 
-              }
+    private val mPlayerListener = object : Player.EventListener {
+        override fun onPlayerError(error: ExoPlaybackException?) {
+            //in case of any error show retry button and retry media play on its click
+            error?.printStackTrace()
+            ivRetry.visibility = View.VISIBLE
+            mPlayerView.hideController()
+        }
 
-              override fun onSeekProcessed() {
-
-              }
-
-              override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
-
-              }
-
-              override fun onPlayerError(error: ExoPlaybackException?) {
-                  Log.d("TEST", "===== onPlayerError - message: "+error?.message);
-                  Log.d("TEST", "===== onPlayerError - sourceException: "+error?.sourceException);
-                  Log.d("TEST", "===== onPlayerError - type: "+error?.type);
-                  Log.d("TEST", "===== onPlayerError - localizedMessage: "+error?.localizedMessage);
-                  Log.d("TEST", "===== onPlayerError - cause: "+error?.cause);
-                  error?.printStackTrace()
-                  if(error?.sourceException is HttpDataSource.HttpDataSourceException){
-
-                  }
-              }
-
-              override fun onLoadingChanged(isLoading: Boolean) {
-                  Log.d("TEST", "===== onLoadingChanged - isLoading: $isLoading");
-
-              }
-
-              override fun onPositionDiscontinuity(reason: Int) {
-
-              }
-
-              override fun onRepeatModeChanged(repeatMode: Int) {
-
-              }
-
-              override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-
-              }
-
-              override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {
-
-              }
-
-              override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                  val state = when(playbackState){
-                      Player.STATE_BUFFERING -> "STATE_BUFFERING"
-                      Player.STATE_ENDED -> "STATE_ENDED"
-                      Player.STATE_IDLE -> "STATE_IDLE"
-                      Player.STATE_READY -> "STATE_READY"
-                      else -> "UNKNOWN"
-                  }
-                  Log.d("TEST", "===== onPlayerStateChanged - playWhenReady: $playWhenReady - playbackState: $playbackState - state: $state ==");
-              }
-
-          })
-
-          player.
-
-      }*/
-
+        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {}
+        override fun onSeekProcessed() {}
+        override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {}
+        override fun onLoadingChanged(isLoading: Boolean) {}
+        override fun onPositionDiscontinuity(reason: Int) {}
+        override fun onRepeatModeChanged(repeatMode: Int) {}
+        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {}
+        override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {}
+        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {}
+    }
 
 }

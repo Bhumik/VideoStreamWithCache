@@ -1,7 +1,5 @@
 package com.finalhints.videostreamwithcache.ui
 
-import android.content.Context
-import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
@@ -10,32 +8,23 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.finalhints.videostreamwithcache.R
 import com.finalhints.videostreamwithcache.models.ItemType
-import com.finalhints.videostreamwithcache.service.ExoDownloadService
-import com.finalhints.videostreamwithcache.utils.DownloadUtil
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.offline.ProgressiveDownloadAction
 import com.google.android.exoplayer2.source.ExtractorMediaSource
+import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.TrackGroupArray
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import kotlinx.android.synthetic.main.activity_exo_player.*
 
 /**
- * activity to show case playing video from remote file using exoplayer with caching latest buffer of video
- * with downloading full video in background
+ * activity to show case playing video from remote file using exoplayer
+ * Note: it doesn't allow caching of video
  */
-class ExoPlayerActivity2 : AppCompatActivity() {
+abstract class BaseExoPlayerActivity : AppCompatActivity() {
     companion object {
-        private const val EXTRA_DATA_ITEM = "EXTRA_DATA_ITEM"
-
-        fun startActivity(context: Context, item: ItemType) {
-            val intent = Intent(context, ExoPlayerActivity2::class.java)
-            intent.putExtra(EXTRA_DATA_ITEM, item)
-            context.startActivity(intent)
-        }
+        public const val EXTRA_DATA_ITEM = "EXTRA_DATA_ITEM"
+        public const val EXTRA_CURRENT_INDEX = "EXTRA_CURRENT_INDEX"
     }
 
     private val mPlayerView: PlayerView by lazy { findViewById<PlayerView>(R.id.exoPlayerView) }
@@ -48,12 +37,17 @@ class ExoPlayerActivity2 : AppCompatActivity() {
     private var mPlayer: SimpleExoPlayer? = null
 
     private var mPlayWhenReady = true
+
     /**
-     * latest playback position from which to start playing video
+     * latest window index from which to start playing video
+     */
+    private var windowIndex: Int = 0
+    /**
+     * latest playback position from which to resume playing video
      */
     private var playbackPosition: Long = 0
 
-    private var mMediaSource: ExtractorMediaSource? = null
+    private var mMediaSource: MediaSource? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,6 +68,10 @@ class ExoPlayerActivity2 : AppCompatActivity() {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
 
+        if (savedInstanceState?.containsKey(EXTRA_CURRENT_INDEX) == true) {
+            playbackPosition = savedInstanceState.getLong(EXTRA_CURRENT_INDEX, 0)
+        }
+
         ivRetry.setOnClickListener {
             ivRetry.visibility = View.GONE
             prepare()
@@ -92,6 +90,11 @@ class ExoPlayerActivity2 : AppCompatActivity() {
         initializePlayer()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong(EXTRA_CURRENT_INDEX, mPlayer?.currentPosition ?: playbackPosition)
+    }
+
 
     public override fun onStop() {
         super.onStop()
@@ -102,48 +105,19 @@ class ExoPlayerActivity2 : AppCompatActivity() {
     /**
      * release player to free resources and coder
      */
-    private fun releasePlayer() {
-        mPlayer?.let {
-            playbackPosition = it.currentPosition
-            mPlayWhenReady = it.playWhenReady
-            it.release()
-        }
-        mPlayer = null
-    }
+    abstract fun releasePlayer()
 
     /**
      * initialize player with default/latest configuration and start playing video
      */
-    private fun initializePlayer() {
-        mPlayer = ExoPlayerFactory.newSimpleInstance(
-                DefaultRenderersFactory(this),
-                DefaultTrackSelector(), DefaultLoadControl())
+    abstract fun initializePlayer()
 
-        mPlayerView.player = mPlayer
-
-        mPlayer?.apply {
-            this.playWhenReady = mPlayWhenReady
-            seekTo(playbackPosition)
-        }
-
-        val mSimpleCache = DownloadUtil.getCache(this)
-
-        val uri = Uri.parse(mItemType.videoUrl)
-
-        val cacheFactory = CacheDataSourceFactory(mSimpleCache, DefaultDataSourceFactory(this, "videoStreamDemo1"))
-
-        /* instance of mediasource with input cache data source */
-        mMediaSource = ExtractorMediaSource.Factory(cacheFactory).createMediaSource(uri)
-
-        /* downlaod service which download full file*/
-        val progressiveDownloadAction = ProgressiveDownloadAction(uri, false, null, null);
-        ExoDownloadService.startService(this, ExoDownloadService::class.java, progressiveDownloadAction, true);
-
-        mPlayer?.addListener(mPlayerListener)
-
-        mPlayer?.prepare(mMediaSource, false, false)
+    /**
+     * return medita source
+     */
+    private fun buildMediaSource(uri: Uri): MediaSource {
+        return ExtractorMediaSource.Factory(DefaultHttpDataSourceFactory("videoStreamDemo0")).createMediaSource(uri)
     }
-
 
     /**
      * retry to play media
