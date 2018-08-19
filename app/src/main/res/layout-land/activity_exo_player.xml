@@ -16,6 +16,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:resize_mode="fixed_width" />
 
+    <ImageView
+        android:id="@+id/ivRetry"
+        style="@style/ExoMediaButton"
+        android:background="@drawable/bg_rect_rounded"
+        android:backgroundTint="#4d4d4d"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/exoPlayerView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/exoPlayerView"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_retry" />
+
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="0dp"

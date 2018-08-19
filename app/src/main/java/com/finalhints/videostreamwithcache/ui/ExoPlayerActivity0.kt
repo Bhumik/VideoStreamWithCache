@@ -5,8 +5,10 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.finalhints.videostreamwithcache.R
 import com.finalhints.videostreamwithcache.models.ItemType
@@ -37,6 +39,7 @@ class ExoPlayerActivity0 : AppCompatActivity() {
     }
 
     private val mPlayerView: PlayerView by lazy { findViewById<PlayerView>(R.id.exoPlayerView) }
+    private val mIvRetry: ImageView by lazy { findViewById<ImageView>(R.id.ivRetry) }
 
     /**
      * object containing item information to play
@@ -63,6 +66,9 @@ class ExoPlayerActivity0 : AppCompatActivity() {
         setContentView(R.layout.activity_exo_player)
         setBundleProperties()
 
+        supportActionBar?.setHomeButtonEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         /* set values */
         tvTitle.text = mItemType.title ?: ""
         tvDescription.text = mItemType.description ?: ""
@@ -81,11 +87,12 @@ class ExoPlayerActivity0 : AppCompatActivity() {
             playbackPosition = savedInstanceState.getLong(EXTRA_CURRENT_INDEX, 0)
         }
 
-        ivRetry.setOnClickListener {
-            ivRetry.visibility = View.GONE
+        mIvRetry.setOnClickListener {
+            mIvRetry.visibility = View.GONE
             prepare()
         }
     }
+
 
     /**
      * set bundle properties
@@ -94,22 +101,34 @@ class ExoPlayerActivity0 : AppCompatActivity() {
         mItemType = intent.getParcelableExtra(EXTRA_DATA_ITEM)
     }
 
-    public override fun onStart() {
-        super.onStart()
-        initializePlayer()
-    }
-
+    /**
+     * save current playback position to bundle
+     */
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putLong(EXTRA_CURRENT_INDEX, mPlayer?.currentPosition ?: playbackPosition)
     }
 
 
+    public override fun onStart() {
+        super.onStart()
+        initializePlayer()
+    }
+
     public override fun onStop() {
         super.onStop()
         releasePlayer()
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
 
     /**
      * release player to free resources and coder
@@ -166,7 +185,7 @@ class ExoPlayerActivity0 : AppCompatActivity() {
         override fun onPlayerError(error: ExoPlaybackException?) {
             //in case of any error show retry button and retry media play on its click
             error?.printStackTrace()
-            ivRetry.visibility = View.VISIBLE
+            mIvRetry.visibility = View.VISIBLE
             mPlayerView.hideController()
         }
 

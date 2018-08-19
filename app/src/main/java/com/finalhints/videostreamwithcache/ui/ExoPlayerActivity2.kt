@@ -5,8 +5,10 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.finalhints.videostreamwithcache.R
 import com.finalhints.videostreamwithcache.models.ItemType
@@ -30,6 +32,7 @@ import kotlinx.android.synthetic.main.activity_exo_player.*
 class ExoPlayerActivity2 : AppCompatActivity() {
     companion object {
         private const val EXTRA_DATA_ITEM = "EXTRA_DATA_ITEM"
+        private const val EXTRA_CURRENT_INDEX = "EXTRA_CURRENT_INDEX"
 
         fun startActivity(context: Context, item: ItemType) {
             val intent = Intent(context, ExoPlayerActivity2::class.java)
@@ -39,6 +42,7 @@ class ExoPlayerActivity2 : AppCompatActivity() {
     }
 
     private val mPlayerView: PlayerView by lazy { findViewById<PlayerView>(R.id.exoPlayerView) }
+    private val mIvRetry: ImageView by lazy { findViewById<ImageView>(R.id.ivRetry) }
 
     /**
      * object containing item information to play
@@ -60,6 +64,8 @@ class ExoPlayerActivity2 : AppCompatActivity() {
         setContentView(R.layout.activity_exo_player)
         setBundleProperties()
 
+        supportActionBar?.setHomeButtonEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         /* set values */
         tvTitle.text = mItemType.title ?: ""
         tvDescription.text = mItemType.description ?: ""
@@ -74,8 +80,12 @@ class ExoPlayerActivity2 : AppCompatActivity() {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
 
-        ivRetry.setOnClickListener {
-            ivRetry.visibility = View.GONE
+        if (savedInstanceState?.containsKey(EXTRA_CURRENT_INDEX) == true) {
+            playbackPosition = savedInstanceState.getLong(EXTRA_CURRENT_INDEX, 0)
+        }
+
+        mIvRetry.setOnClickListener {
+            mIvRetry.visibility = View.GONE
             prepare()
         }
     }
@@ -85,6 +95,15 @@ class ExoPlayerActivity2 : AppCompatActivity() {
      */
     private fun setBundleProperties() {
         mItemType = intent.getParcelableExtra(EXTRA_DATA_ITEM)
+    }
+
+
+    /**
+     * save current playback position to bundle
+     */
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong(EXTRA_CURRENT_INDEX, mPlayer?.currentPosition ?: playbackPosition)
     }
 
     public override fun onStart() {
@@ -98,6 +117,15 @@ class ExoPlayerActivity2 : AppCompatActivity() {
         releasePlayer()
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
 
     /**
      * release player to free resources and coder
@@ -136,8 +164,8 @@ class ExoPlayerActivity2 : AppCompatActivity() {
         mMediaSource = ExtractorMediaSource.Factory(cacheFactory).createMediaSource(uri)
 
         /* downlaod service which download full file*/
-        val progressiveDownloadAction = ProgressiveDownloadAction(uri, false, null, null);
-        ExoDownloadService.startService(this, ExoDownloadService::class.java, progressiveDownloadAction, true);
+        val progressiveDownloadAction = ProgressiveDownloadAction(uri, false, null, null)
+        ExoDownloadService.startService(this, ExoDownloadService::class.java, progressiveDownloadAction, true)
 
         mPlayer?.addListener(mPlayerListener)
 
@@ -157,7 +185,7 @@ class ExoPlayerActivity2 : AppCompatActivity() {
         override fun onPlayerError(error: ExoPlaybackException?) {
             //in case of any error show retry button and retry media play on its click
             error?.printStackTrace()
-            ivRetry.visibility = View.VISIBLE
+            mIvRetry.visibility = View.VISIBLE
             mPlayerView.hideController()
         }
 

@@ -48,11 +48,11 @@ object DownloadUtil {
         }
     }
 
-    private fun getDownloadDirectory(context: Context): File {
+    private fun getDownloadDirectory1(context: Context): File {
         return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
     }
 
-    private fun getDownloadDirectory11(context: Context): File {
+    private fun getDownloadDirectory(context: Context): File {
         var downloadDirectory = context.getExternalFilesDir(null)
         if (downloadDirectory == null) {
             downloadDirectory = context.filesDir
@@ -62,7 +62,7 @@ object DownloadUtil {
 
     fun getDownloadManager(context: Context): DownloadManager {
         if (downloadManager == null) {
-            val actionFile = File(getDownloadDirectory(context), "actionAbc.mp4")
+            val actionFile = File(getDownloadDirectory(context), "action")
             downloadManager = DownloadManager(
                     getCache(context),
                     DefaultDataSourceFactory(

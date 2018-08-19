@@ -6,9 +6,9 @@ import android.os.Parcelable
 data class ItemType(
         var title: String? = null,
         var description: String? = null,
-        //var videoUrl: String = "https://socialcops.com/images/old/spec/home/header-img-background_video-1920-480.mp4"
+        var videoUrl: String = "https://socialcops.com/images/old/spec/home/header-img-background_video-1920-480.mp4"
         //var videoUrl: String = "http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
-        var videoUrl: String = "https://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_10mb.mp4"
+        //var videoUrl: String = "https://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_10mb.mp4"
 ) : Parcelable {
 
     constructor(parcel: Parcel) : this(
