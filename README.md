@@ -8,9 +8,15 @@ This demo contain 3 screen to demostrate different functionalities
 2. Second screen stream MP4 Video with caching
 3. Third screen stream MP$ video with full caching (Saving offline)
 
+
+## Screenshots
+|Main Screen|Video screen|Landscape view|Notification for offline download|
+|:---:|:---:|:---:|:---:|
+|![main screen](https://github.com/Bhumik/VideoStreamWithCache/blob/master/media/mainscreen.png)|![main screen](https://github.com/Bhumik/VideoStreamWithCache/blob/master/media/screen1.png)|![main screen](https://github.com/Bhumik/VideoStreamWithCache/blob/master/media/landscape_view.jpg)|![main screen](https://github.com/Bhumik/VideoStreamWithCache/blob/master/media/notification_saving_offline.png)|
+
+
 ## Third parties
 * ExoPlayer: <https://github.com/google/ExoPlayer>
-
 
 ## Contribute:
 *Simple 3 step to contribute into this repo:*
