@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.finalhints.videostreamwithcache.R
@@ -199,7 +200,11 @@ class ExoPlayerActivity1 : AppCompatActivity() {
         override fun onRepeatModeChanged(repeatMode: Int) {}
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {}
         override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {}
-        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {}
+        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+            if (playbackState == Player.STATE_READY && mPlayerView.layoutParams.height != FrameLayout.LayoutParams.WRAP_CONTENT) {
+                mPlayerView.layoutParams.height = FrameLayout.LayoutParams.WRAP_CONTENT
+            }
+        }
     }
 
 }
